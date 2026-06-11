@@ -24,6 +24,7 @@ Usage:
 
 import os
 import json
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -58,24 +59,32 @@ def load_prompt(name: str) -> str:
     return (PROMPTS / name).read_text(encoding="utf-8")
 
 
-def track_cost(label, message):
+def track_cost(label, message, elapsed_s):
     inp = message.usage.input_tokens
     out = message.usage.output_tokens
     cost = (inp * PRICE_INPUT_PER_M + out * PRICE_OUTPUT_PER_M) / 1_000_000
-    entry = {"label": label, "input_tokens": inp, "output_tokens": out, "cost_usd": round(cost, 6)}
+    entry = {
+        "label": label,
+        "input_tokens": inp,
+        "output_tokens": out,
+        "cost_usd": round(cost, 6),
+        "time_s": round(elapsed_s, 2),
+    }
     usage_log.append(entry)
-    print(f"  [{label}] in={inp} out={out} -> ${cost:.4f}")
+    print(f"  [{label}] in={inp} out={out} -> ${cost:.4f} ({elapsed_s:.2f}s)")
     return entry
 
 
 def call_agent(label: str, prompt_text: str) -> str:
     print(f"\n=== Running: {label} ===")
+    start = time.monotonic()
     message = client.messages.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt_text}],
     )
-    track_cost(label, message)
+    elapsed = time.monotonic() - start
+    track_cost(label, message, elapsed)
     return message.content[0].text.strip()
 
 
@@ -148,12 +157,14 @@ def main():
     total_out = sum(e["output_tokens"] for e in usage_log)
     total_cost = sum(e["cost_usd"] for e in usage_log)
 
+    total_time = sum(e["time_s"] for e in usage_log)
+
     cost_lines = ["# Token & Cost Report\n", f"_Generated: {datetime.now().isoformat(timespec='seconds')}_\n", f"_Model: {MODEL}_\n"]
-    cost_lines.append("| Agent | Model | Input Tokens | Output Tokens | Cost (USD) |")
-    cost_lines.append("|---|---|---:|---:|---:|")
+    cost_lines.append("| Agent | Model | Input Tokens | Output Tokens | Time (s) | Cost (USD) |")
+    cost_lines.append("|---|---|---:|---:|---:|---:|")
     for e in usage_log:
-        cost_lines.append(f"| {e['label']} | {MODEL} | {e['input_tokens']} | {e['output_tokens']} | ${e['cost_usd']:.4f} |")
-    cost_lines.append(f"| **TOTAL** | {MODEL} | **{total_in}** | **{total_out}** | **${total_cost:.4f}** |")
+        cost_lines.append(f"| {e['label']} | {MODEL} | {e['input_tokens']} | {e['output_tokens']} | {e['time_s']:.2f} | ${e['cost_usd']:.4f} |")
+    cost_lines.append(f"| **TOTAL** | {MODEL} | **{total_in}** | **{total_out}** | **{total_time:.2f}** | **${total_cost:.4f}** |")
     cost_report = "\n".join(cost_lines) + "\n"
 
     (OUTPUT / "cost_report.md").write_text(cost_report, encoding="utf-8")
@@ -162,8 +173,26 @@ def main():
     final_artifact = published + "\n\n---\n\n" + cost_report
     (OUTPUT / "final_decision_brief.md").write_text(final_artifact, encoding="utf-8")
 
+    # ── Per-agent output files ─────────────────────────────────────
+    agent_dir = OUTPUT / "agent_outputs"
+    agent_dir.mkdir(exist_ok=True)
+    agent_files = {
+        "brief": ("00_decision_brief.md", "Decision Brief (Input)"),
+        "planner": ("01_planner.md", "1 - Planner Output"),
+        "researcher": ("02_researcher.md", "2 - Researcher Output"),
+        "analyzer_a": ("03a_analyzer_a_customer.md", "3a - Analyzer A (Customer/Revenue Lens) Output"),
+        "analyzer_b": ("03b_analyzer_b_risk.md", "3b - Analyzer B (Risk/Privacy Lens) Output"),
+        "synthesis": ("04_synthesis.md", "4 - Synthesis Output"),
+        "critic": ("05_critic.md", "5 - Critic Output"),
+        "reviser": ("06_reviser.md", "6 - Reviser Output"),
+        "confidence": ("07_confidence_scorer.md", "7 - Confidence Scorer Output"),
+        "publisher": ("08_publisher.md", "8 - Publisher Output (Final)"),
+    }
+    for key, (fname, title) in agent_files.items():
+        (agent_dir / fname).write_text(f"# {title}\n\n{trace.get(key, '')}\n", encoding="utf-8")
+
     print("\n" + cost_report)
-    print("Done. Outputs written to ./output/")
+    print("Done. Outputs written to ./output/ (per-agent files in ./output/agent_outputs/)")
 
 
 if __name__ == "__main__":
