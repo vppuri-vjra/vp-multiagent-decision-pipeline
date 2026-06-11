@@ -6,18 +6,47 @@ Confidence Report, with full per-agent token/cost tracking.
 
 ## Flow
 
+Designed flow, mapped to the source prompt-library demo steps:
+
 ```
-Decision Brief
-   -> Planner            (task decomposition, missing info, decision criteria)
-   -> Researcher         (facts, assumptions, unknowns, risk triggers)
-   -> Analyzer A (Customer/Revenue lens) ──┐
-   -> Analyzer B (Risk/Privacy lens)       ┘
-   -> Synthesis          (merges A & B, resolves conflicts explicitly)
-   -> Critic              (red-team review)
-   -> Reviser              (addresses critique, adds ESCALATE flag)
-   -> Confidence Scorer    (0-100 score + rationale)
-   -> Publisher            (final paste-ready artefact)
+Decision Brief (Option 1: Premium Subscription Tier)
+        │
+        ▼
+   1. PLANNER  (Demo 2)        → TASK_DECOMPOSITION, MISSING_INFO, DECISION_CRITERIA
+        │
+        ▼
+   2. RESEARCHER  (Demo 3)     → FACTS, ASSUMPTIONS, UNKNOWNS, RISK_TRIGGERS
+        │
+        ├──────────────┬───────────────┐
+        ▼              ▼
+   3. ANALYZER A   3. ANALYZER B        (run in parallel — both take Brief+Planner+Researcher)
+   (Customer/Revenue   (Risk/Reliability/
+    lens, Demo 6-7A)    Privacy lens, Demo 6-7B)
+        │              │
+        └──────┬───────┘
+               ▼
+   4. SYNTHESIS AGENT (Demo 6-8)  → merges A+B, resolves conflicts explicitly
+               │
+               ▼
+   5. CRITIC (Demo 6-9)           → red-team critique of synthesis memo
+               │
+               ▼
+   6. REVISER (Demo 6-10)         → revised memo addressing critique + ESCALATE
+               │
+               ▼
+   7. CONFIDENCE SCORER (Demo 6-11) → score + why + what would increase confidence
+               │
+               ▼
+   8. PUBLISHER (Demo 6-12)       → final paste-ready artefact (memo + confidence)
+               │
+               ▼
+   Output: final_decision_brief.md + cost_report.json/md
 ```
+
+> **Note:** Analyzer A and B are conceptually parallel (both depend only on
+> Brief + Planner + Researcher output). The current `run_pipeline.py`
+> implementation calls them sequentially for simplicity; cost/timing for
+> each is tracked independently in `cost_report.md`.
 
 ## Setup
 
