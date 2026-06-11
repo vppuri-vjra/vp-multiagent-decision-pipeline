@@ -33,7 +33,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=".env", override=True, encoding="utf-8")
 
 MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5")
-MAX_TOKENS = 2000
+MAX_TOKENS = 4096
 
 # Claude Sonnet pricing (per million tokens)
 PRICE_INPUT_PER_M = 3.0
@@ -49,7 +49,7 @@ api_key = os.environ.get("ANTHROPIC_API_KEY")
 if not api_key:
     raise EnvironmentError("ANTHROPIC_API_KEY not set in .env")
 
-client = anthropic.Anthropic(api_key=api_key)
+client = anthropic.Anthropic(api_key=api_key, timeout=120.0, max_retries=2)
 
 usage_log = []
 
@@ -148,12 +148,12 @@ def main():
     total_out = sum(e["output_tokens"] for e in usage_log)
     total_cost = sum(e["cost_usd"] for e in usage_log)
 
-    cost_lines = ["# Token & Cost Report\n", f"_Generated: {datetime.now().isoformat(timespec='seconds')}_\n"]
-    cost_lines.append("| Agent | Input Tokens | Output Tokens | Cost (USD) |")
-    cost_lines.append("|---|---:|---:|---:|")
+    cost_lines = ["# Token & Cost Report\n", f"_Generated: {datetime.now().isoformat(timespec='seconds')}_\n", f"_Model: {MODEL}_\n"]
+    cost_lines.append("| Agent | Model | Input Tokens | Output Tokens | Cost (USD) |")
+    cost_lines.append("|---|---|---:|---:|---:|")
     for e in usage_log:
-        cost_lines.append(f"| {e['label']} | {e['input_tokens']} | {e['output_tokens']} | ${e['cost_usd']:.4f} |")
-    cost_lines.append(f"| **TOTAL** | **{total_in}** | **{total_out}** | **${total_cost:.4f}** |")
+        cost_lines.append(f"| {e['label']} | {MODEL} | {e['input_tokens']} | {e['output_tokens']} | ${e['cost_usd']:.4f} |")
+    cost_lines.append(f"| **TOTAL** | {MODEL} | **{total_in}** | **{total_out}** | **${total_cost:.4f}** |")
     cost_report = "\n".join(cost_lines) + "\n"
 
     (OUTPUT / "cost_report.md").write_text(cost_report, encoding="utf-8")
