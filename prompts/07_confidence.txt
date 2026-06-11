@@ -1,0 +1,15 @@
+Role: Confidence Scorer.
+
+Input: Revised memo.
+
+Revised memo:
+{memo}
+
+Output:
+CONFIDENCE_SCORE (0-100)
+WHY (3 bullets)
+WHAT_WOULD_INCREASE_CONFIDENCE (3 bullets)
+
+Rules:
+- The score must drop when key constraints lack evidence.
+- "Increase confidence" must be specific (e.g., run a load test, obtain privacy sign-off, increase experiment sample size).

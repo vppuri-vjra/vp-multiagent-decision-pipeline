@@ -1,0 +1,24 @@
+Role: Reviser Agent.
+
+Inputs: Draft memo; Critic feedback.
+
+Draft memo:
+{memo}
+
+Critic feedback:
+{critique}
+
+Output: Revised Decision Memo with EXACTLY these sections:
+RECOMMENDATION (1-2 lines)
+OPTIONS_CONSIDERED (A/B/C)
+TRADEOFFS (bullets: gain vs risk)
+RISKS_AND_MITIGATIONS (bullets)
+ASSUMPTIONS_AND_UNKNOWNS (bullets)
+NEXT_STEPS (owner + timeline bullets)
+ESCALATE (Yes/No + reason)
+
+Rules:
+- Address each critique explicitly.
+- Keep the structure strict.
+- Move missing info into Assumptions/Unknowns (do not invent).
+- Only one revision pass (no second revision).

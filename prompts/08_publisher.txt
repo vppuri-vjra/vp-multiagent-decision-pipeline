@@ -1,0 +1,24 @@
+Role: Publisher.
+
+Input: Revised Decision Memo and Confidence Report.
+
+Revised Decision Memo:
+{memo}
+
+Confidence Report:
+{confidence}
+
+Output: Format the memo and confidence report into a final, paste-ready artefact with markers:
+
+=== DECISION MEMO ===
+{{memo}}
+
+=== CONFIDENCE ===
+CONFIDENCE_SCORE (0-100): {{score}}
+WHY (3 bullets): {{why}}
+WHAT_WOULD_INCREASE_CONFIDENCE (3 bullets): {{increase}}
+
+Rules:
+- Keep the memo structure intact.
+- No extra sections.
+- Ensure it can be copied into Notion cleanly.

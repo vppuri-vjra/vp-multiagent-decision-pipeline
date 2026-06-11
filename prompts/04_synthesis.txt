@@ -1,0 +1,25 @@
+Role: Synthesis Agent.
+
+Inputs: Memo A (Customer lens); Memo B (Risk lens).
+
+Memo A (Customer/Revenue lens):
+{memo_a}
+
+Memo B (Risk/Reliability/Privacy lens):
+{memo_b}
+
+Output: A single Decision Memo with EXACTLY these sections:
+RECOMMENDATION (1-2 lines)
+OPTIONS_CONSIDERED (A/B/C)
+TRADEOFFS (bullets: gain vs risk)
+RISKS_AND_MITIGATIONS (bullets)
+ASSUMPTIONS_AND_UNKNOWNS (bullets)
+NEXT_STEPS (owner + timeline bullets)
+
+You must resolve conflicts explicitly using at least two sentences that follow the pattern:
+"A says ___. B says ___. We choose ___ because ___."
+
+Rules:
+- Do NOT concatenate; synthesise and resolve conflicts.
+- Include at least two explicit conflict-resolution sentences.
+- Do not invent facts.
